@@ -1,0 +1,50 @@
+body {
+      background-color: #f5f5f5;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    th, td {
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .highlight {
+      background-color: #ff9f9f !important; /* ハイライト色 (赤系) */
+    }
+
+    .lowlight {
+      background-color: #8ac3ff !important; /* ローライト色 (青系) */
+    }
+
+    .input-group {
+      justify-content: center;
+      margin-bottom: 15px;
+    }
+
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    #usernameHeader {
+      margin-top: 20px;
+      font-size: 1.5rem;
+    }
+
+    .col-3 th, .col-3 td {
+      width: calc(100% / 3);
+    }
+
+    .table-striped tr:nth-of-type(odd) {
+      background-color: #f9f9f9; /* 交互の背景色 (薄いグレー) */
+    }
+
+    .table-striped tr:nth-of-type(even) {
+      background-color: #ffffff; /* 交互の背景色 (白) */
+    }
