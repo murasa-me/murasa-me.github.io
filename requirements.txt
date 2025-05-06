@@ -1,3 +1,3 @@
-requests
-beautifulsoup4
+feedparser
 openai
+beautifulsoup4  # 不要なら削除可
