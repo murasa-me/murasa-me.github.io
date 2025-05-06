@@ -1,66 +1,64 @@
-import feedparser
+import os
+import requests
+from bs4 import BeautifulSoup
 import openai
 import json
+from urllib.parse import urljoin
 
-# ニュースフィードのURL
-NEWS_FEED_URLS = [
-    "https://news.yahoo.co.jp/rss/topics/domestic.xml",
-    "https://news.yahoo.co.jp/rss/topics/science.xml",
-    "https://news.yahoo.co.jp/rss/topics/life.xml",
-    "https://news.yahoo.co.jp/rss/topics/strange.xml"
-]
+# ニュースサイトURL
+NEWS_URL = "https://news.yahoo.co.jp/topics"
 
-# フィルター対象のキーワード
-NG_KEYWORDS = ["事件", "殺人", "逮捕", "死亡", "政治", "選挙", "戦争", "紛争", "炎上", "トラブル", "不祥事", "事故", "抗議", "犯罪"]
+# OpenAI APIキー（GitHub ActionsではSecretsに設定する）
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# ChatGPT に渡すプロンプト
-def make_prompt(title, summary):
-    return f"""
-以下のニュース記事タイトルと要約を読んでください。
+def fetch_news():
+    res = requests.get(NEWS_URL)
+    soup = BeautifulSoup(res.text, "html.parser")
+    items = soup.select("li a")  # 適宜変更
 
-タイトル: {title}
-要約: {summary}
+    news_list = []
+    for item in items:
+        title = item.get_text().strip()
+        link = urljoin(NEWS_URL, item.get("href"))
+        if title:
+            news_list.append({
+                "title": title,
+                "link": link
+            })
+    return news_list
 
-内容が「事件・政治・痛ましい話題」などネガティブなものであれば 'NO'、動物や飲食など穏やかで心温まる内容であれば 'YES' だけを出力してください。
-"""
+def is_heartwarming(title):
+    prompt = (
+        "次のニュースのタイトルは心温まる話題（動物、グルメ、前向きな内容など）ですか？\n"
+        "YES または NO で答えてください。\n"
+        f"タイトル: {title}"
+    )
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+    answer = response.choices[0].message.content.strip().upper()
+    return "YES" in answer
 
-# ChatGPT に問い合わせてフィルタリング
-def is_heartwarming(title, summary):
-    prompt = make_prompt(title, summary)
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.2
-        )
-        answer = response['choices'][0]['message']['content'].strip().upper()
-        return "YES" in answer
-    except Exception as e:
-        print("Error:", e)
-        return False
+def filter_news(news_list):
+    filtered = []
+    for news in news_list:
+        try:
+            if is_heartwarming(news["title"]):
+                filtered.append(news)
+        except Exception as e:
+            print(f"Error filtering: {e}")
+    return filtered
 
-# ニュース取得＆フィルタリング
-def fetch_and_filter_news():
-    filtered_news = []
-
-    for url in NEWS_FEED_URLS:
-        feed = feedparser.parse(url)
-        for entry in feed.entries:
-            title = entry.title
-            summary = entry.get("summary", "")
-            link = entry.link
-
-            if any(ng in title for ng in NG_KEYWORDS):
-                continue
-
-            if is_heartwarming(title, summary):
-                filtered_news.append({
-                    "title": title,
-                    "link": link
-                })
-
-    with open("filtered_news.json", "w", encoding="utf-8") as f:
-        json.dump(filtered_news, f, ensure_ascii=False, indent=2)
+def save_json(data, filename="filtered_news.json"):
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
 if __name__ == "__main__":
-    fetch_and_filter_news()
+    news = fetch_news()
+    print(f"取得したニュース数: {len(news)} 件")
+    filtered = filter_news(news)
+    print(f"フィルター通過数: {len(filtered)} 件")
+    save_json(filtered)
