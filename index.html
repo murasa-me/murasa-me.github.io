@@ -2,33 +2,51 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>あったけぇニュース</title>
-  <style>
-    body { font-family: sans-serif; padding: 2em; background: #f9f9f9; }
-    h1 { color: #333; }
-    ul { list-style: none; padding: 0; }
-    li { margin-bottom: 1em; }
-    a { text-decoration: none; color: #007acc; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>あったけぇニュース一覧</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>あったけぇニュース</h1>
-  <ul id="news-list"></ul>
+  <header>
+    <h1>あったけぇニュース一覧</h1>
+    <p>動物や飲食など、穏やかな話題を毎日お届けします</p>
+  </header>
+  <main id="news-container">
+    <p>ニュースを読み込み中...</p>
+  </main>
+  <footer>
+    <p>&copy; 2025 murasa-me</p>
+  </footer>
   <script>
-    fetch("filtered_news.json")
-      .then(response => response.json())
+    fetch('filtered_news.json')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('ニュースデータの取得に失敗しました。');
+        }
+        return response.json();
+      })
       .then(data => {
-        const ul = document.getElementById("news-list");
+        const container = document.getElementById('news-container');
+        container.innerHTML = '';
+        if (data.length === 0) {
+          container.innerHTML = '<p>表示するニュースがありません。</p>';
+          return;
+        }
+        const ul = document.createElement('ul');
         data.forEach(item => {
-          const li = document.createElement("li");
-          const a = document.createElement("a");
+          const li = document.createElement('li');
+          const a = document.createElement('a');
           a.href = item.link;
           a.textContent = item.title;
-          a.target = "_blank";
+          a.target = '_blank';
           li.appendChild(a);
           ul.appendChild(li);
         });
+        container.appendChild(ul);
+      })
+      .catch(error => {
+        const container = document.getElementById('news-container');
+        container.innerHTML = `<p>${error.message}</p>`;
       });
   </script>
 </body>
