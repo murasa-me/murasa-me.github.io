@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>心温まるニュース</title>
+  <style>
+    body { font-family: sans-serif; padding: 2em; background: #f9f9f9; }
+    h1 { color: #333; }
+    ul { list-style: none; padding: 0; }
+    li { margin-bottom: 1em; }
+    a { text-decoration: none; color: #007acc; }
+  </style>
+</head>
+<body>
+  <h1>心温まるニュース一覧</h1>
+  <ul id="news-list"></ul>
+  <script>
+    fetch("filtered_news.json")
+      .then(response => response.json())
+      .then(data => {
+        const ul = document.getElementById("news-list");
+        data.forEach(item => {
+          const li = document.createElement("li");
+          const a = document.createElement("a");
+          a.href = item.link;
+          a.textContent = item.title;
+          a.target = "_blank";
+          li.appendChild(a);
+          ul.appendChild(li);
+        });
+      });
+  </script>
+</body>
+</html>
