@@ -1,13 +1,13 @@
 import os
 import json
-import openai
 import feedparser
+from openai import OpenAI
 
 LOG_FILE = "filter_log.txt"
 OUTPUT_FILE = "filtered_news.json"
 
 # OpenAI APIキー
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # 利用するRSSフィード（今後ここに増やせます）
 RSS_FEEDS = [
@@ -45,7 +45,7 @@ def is_heartwarming(news_item):
         "回答は YES または NO のみ。"
     )
     try:
-        res = openai.ChatCompletion.create(
+        res = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}]
         )
